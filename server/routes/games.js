@@ -1,29 +1,22 @@
 const express = require('express');
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 require('dotenv').config();
 
 const router = express.Router();
-router.get('/test', (req, res) => {
-    res.send('/api/games/test is working!');
-});
+
+// GET /api/games/user/:steamId
 router.get('/user/:steamId', async (req, res) => {
-    const steamId = req.params.steamId;
+  const steamId = req.params.steamId;
+  const url = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${process.env.STEAM_API_KEY}&steamid=${steamId}&include_appinfo=true&format=json`;
 
-    if (!steamId) {
-        return res.status(400).json({ error: 'Missing Steam ID' });
-    }
-
-    const apiUrl = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${process.env.STEAM_API_KEY}&steamid=${steamId}&include_appinfo=true`;
-
-    try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-        console.log('Steam API Response:', JSON.stringify(data, null, 2));
-        res.json(data);
-    } catch (err) {
-        console.error('Error fetching games from Steam:', err);
-        res.status(500).json({ error: 'Failed to fetch games' });
-    }
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching Steam games:', error);
+    res.status(500).json({ error: 'Failed to fetch games from Steam' });
+  }
 });
 
 module.exports = router;
