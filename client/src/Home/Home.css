@@ -24,7 +24,7 @@ header p {
 button {
     padding: 0.75rem 1.5rem;
     font-size: 1rem;
-    background-color: #ff5959;
+    background-color: #3fb841;
     border: none;
     color: white;
     border-radius: 8px;
@@ -32,7 +32,7 @@ button {
 }
 
     button:hover {
-        background-color: #ff3030;
+        background-color: #21b05a;
     }
 .steam-login-btn {
     margin-top: 2rem;

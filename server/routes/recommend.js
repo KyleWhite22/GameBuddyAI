@@ -14,9 +14,22 @@ router.post('/', async (req, res) => {
     const uniqueTags = [...new Set(allTags)];
 
     // ✅ Create a fake recommendation using the tags
-    const recommendations = `Because you enjoy games with tags like: ${uniqueTags.join(', ')}, you might like Hades, Hollow Knight, or Slay the Spire.`;
+    //const recommendations = `Because you enjoy games with tags like: ${uniqueTags.join(', ')}, you might like Hades, Hollow Knight, or Slay the Spire.`;
 
-    res.json({ recommendations });
+    //res.json({ recommendations });
+    const { OpenAI } = require('openai');
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    const prompt = `Suggest 3 games based on these Steam tags: ${uniqueTags.join(', ')}. 
+Give short explanations for why each game was chosen. Format the response nicely for display. Keep in the consistent format of game title, game tags, and a short description`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 200,
+    });
+
+    res.json({ recommendations: completion.choices[0].message.content });
   } catch (err) {
     console.error('🔥 Recommendation error:', err);
     res.status(500).json({ error: 'Internal Server Error' });
