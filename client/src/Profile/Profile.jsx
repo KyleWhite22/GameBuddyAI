@@ -9,6 +9,7 @@ function Profile() {
     const [loading, setLoading] = useState(true);
     const [rotation, setRotation] = useState(0);
     const [showGlow, setShowGlow] = useState(false);
+    const [topGames, setTopGames] = useState([]);
     const requestRef = useRef();
 
     useEffect(() => {
@@ -29,17 +30,25 @@ function Profile() {
     }, []);
 
     function fetchGames(steamId) {
-        fetch(`http://localhost:5000/api/games/user/${steamId}`)
-            .then(res => res.json())
-            .then(data => {
-                setGames(data.response?.games?.slice(0, 20) || []);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error('Failed to fetch games:', err);
-                setLoading(false);
-            });
-    }
+  fetch(`http://localhost:5000/api/games/user/${steamId}`)
+    .then(res => res.json())
+    .then(data => {
+      setGames(data.allGames || []);
+      const topThree = [...games]
+  .sort((a, b) => b.playtime_forever - a.playtime_forever)
+  .slice(0, 3)
+  .map(g => ({
+    name: g.name || g.appid.toString(),  // Use appid as fallback
+    tags: []  // Leave empty or fetch from Twitch later
+  }));
+      localStorage.setItem('topThree', JSON.stringify(data.topThree)); // ✅ store for chatbot
+      setLoading(false);
+    })
+    .catch(err => {
+      console.error('Failed to fetch games:', err);
+      setLoading(false);
+    });
+}
 
     useEffect(() => {
         const animate = () => {
