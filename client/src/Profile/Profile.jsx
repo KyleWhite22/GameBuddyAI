@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Profile.css';
 
 function Profile() {
+    const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -102,7 +104,15 @@ function Profile() {
             </div>
 
             {showGlow && <div className="cyber-glow-overlay" />}
+            <button
+                onClick={() => navigate('/chatbot')}
+                style={{ marginTop: '2rem', padding: '0.5rem 1rem', fontSize: '1rem' }}
+            >
+                Chat with Game Recommender
+            </button>
+
         </div>
+
     );
 }
 
