@@ -7,7 +7,7 @@ const cors = require('cors');
 
 const steamAuth = require('./auth/steam');
 const gamesRoute = require('./routes/games'); // ✅ NEW
-const twitchTagsRoute = require('./routes/twitchTags');
+const steamTagsRoute = require('./routes/steamTags');
 const recommendRoute = require('./routes/recommend');
 
 const app = express();
@@ -34,7 +34,7 @@ app.use(passport.session());
 app.use(express.json());
 app.use('/auth', steamAuth);
 app.use('/api/games', gamesRoute); // ✅ NEW
-app.use('/api/twitch', twitchTagsRoute);
+app.use('/api/steam', steamTagsRoute);
 app.use('/api/recommend', recommendRoute);  // New recommendation route
 
 

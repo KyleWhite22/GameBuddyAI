@@ -2,43 +2,75 @@ import React, { useState } from 'react';
 
 function Chatbot() {
   const [recommendations, setRecommendations] = useState('');
-  const [error, setError] = useState('');
+  const [gameTags, setGameTags] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchTagsForTopGames = async (topGames) => {
+    const tagPromises = topGames.map(async (game) => {
+      const res = await fetch(`http://localhost:5000/api/steam/tags/${game.appid}`);
+      const data = await res.json();
+      return {
+        name: game.name,
+        appid: game.appid,
+        tags: data.tags || []
+      };
+    });
+    return Promise.all(tagPromises);
+  };
 
   const fetchRecommendations = async () => {
+    setLoading(true);
     try {
       const topThree = JSON.parse(localStorage.getItem('topThree')) || [];
 
-      if (!Array.isArray(topThree) || topThree.length === 0) {
-        setError('No top games found in local storage.');
-        return;
-      }
+      const gamesWithTags = await fetchTagsForTopGames(topThree);
+      setGameTags(gamesWithTags); // ✅ save for display
 
       const res = await fetch('http://localhost:5000/api/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gamesWithTags: topThree })
+        body: JSON.stringify({ gamesWithTags }),
       });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Failed to fetch recommendations');
-      }
 
       const data = await res.json();
       setRecommendations(data.recommendations);
-      setError('');
     } catch (err) {
-      setError(err.message);
+      setRecommendations('Failed to fetch recommendations.');
       console.error('❌ Error fetching recommendations:', err);
     }
+    setLoading(false);
   };
 
   return (
     <div style={{ padding: '2rem' }}>
       <h1>AI Game Recommender</h1>
-      <button onClick={fetchRecommendations}>Get Recommendations</button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <pre>{recommendations}</pre>
+      <button onClick={fetchRecommendations} disabled={loading}>
+        {loading ? 'Loading...' : 'Get Recommendations'}
+      </button>
+
+      {gameTags.length > 0 && (
+        <div style={{ marginTop: '2rem' }}>
+          <h2>Top 3 Games and Their Tags:</h2>
+          {gameTags.map((game) => (
+            <div key={game.appid} style={{ marginBottom: '1rem' }}>
+              <h3>{game.name}</h3>
+              <p><strong>Tags:</strong></p>
+              <ul>
+                {game.tags.map((tag, i) => (
+                  <li key={i}>{tag}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {recommendations && (
+        <div style={{ marginTop: '2rem' }}>
+          <h2>Recommendations:</h2>
+          <pre>{recommendations}</pre>
+        </div>
+      )}
     </div>
   );
 }

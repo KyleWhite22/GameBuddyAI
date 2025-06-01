@@ -9,8 +9,12 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Invalid games format' });
     }
 
-    // Example response without calling OpenAI
-    const recommendations = `Based on your games: ${gamesWithTags.map(g => g.name).join(', ')}, you might like Hollow Knight or Dead Cells.`;
+    // ✅ Extract and flatten all tags
+    const allTags = gamesWithTags.flatMap(game => game.tags || []);
+    const uniqueTags = [...new Set(allTags)];
+
+    // ✅ Create a fake recommendation using the tags
+    const recommendations = `Because you enjoy games with tags like: ${uniqueTags.join(', ')}, you might like Hades, Hollow Knight, or Slay the Spire.`;
 
     res.json({ recommendations });
   } catch (err) {
