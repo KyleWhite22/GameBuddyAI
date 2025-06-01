@@ -30,28 +30,18 @@ function Profile() {
     }, []);
 
     function fetchGames(steamId) {
-        fetch(`http://localhost:5000/api/games/user/${steamId}`)
-            .then(res => res.json())
-            .then(data => {
-                setGames(data.allGames || []);
-
-                // ✅ Compute top 3 games based on playtime
-                const topThree = [...data.allGames]
-                    .sort((a, b) => b.playtime_forever - a.playtime_forever)
-                    .slice(0, 3)
-                    .map(game => ({
-                        name: game.name || game.appid.toString(),
-                        appid: game.appid
-                    }));
-
-                localStorage.setItem('topThree', JSON.stringify(topThree));
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error('Failed to fetch games:', err);
-                setLoading(false);
-            });
-    }
+  fetch(`http://localhost:5000/api/games/user/${steamId}`)
+    .then(res => res.json())
+    .then(data => {
+      setGames(data.allGames || []);
+      localStorage.setItem('topThree', JSON.stringify(data.topThree));
+      setLoading(false);
+    })
+    .catch(err => {
+      console.error('Failed to fetch games:', err);
+      setLoading(false);
+    });
+}
 
 
 
@@ -120,7 +110,6 @@ function Profile() {
             {showGlow && <div className="cyber-glow-overlay" />}
             <button
                 onClick={() => navigate('/chatbot')}
-                style={{ marginTop: '2rem', padding: '0.5rem 1rem', fontSize: '1rem' }}
             >
                 Chat with Game Recommender
             </button>

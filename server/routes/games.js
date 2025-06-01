@@ -3,34 +3,40 @@ const router = express.Router();
 const axios = require('axios');
 
 router.get('/user/:steamId', async (req, res) => {
-  const steamId = req.params.steamId;
+  const { steamId } = req.params;
+  const url = `http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${process.env.STEAM_API_KEY}&steamid=${steamId}&format=json&include_appinfo=1`;
 
   try {
-    const url = `http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${process.env.STEAM_API_KEY}&steamid=${steamId}&include_appinfo=true&format=json`;
-
     const response = await axios.get(url);
     const games = response.data.response.games || [];
 
-    const topThree = [...games]
+    const allGames = games.map(game => ({
+      appid: game.appid,
+      name: game.name,
+      playtime_forever: game.playtime_forever,
+      img_icon_url: game.img_icon_url
+    }));
+
+    // Filter out Wallpaper Engine (by appid or name)
+    const filtered = allGames.filter(g =>
+      g.appid !== 431960 &&
+      !(g.name && g.name.toLowerCase().includes('wallpaper engine'))
+    );
+
+    // Pick top 3 from filtered list
+    const topThree = [...filtered]
       .sort((a, b) => b.playtime_forever - a.playtime_forever)
       .slice(0, 3)
-      .map(g => ({
-        name: g.name || g.appid.toString(),
-        tags: [] // placeholder for Twitch tags
+      .map(game => ({
+        ...game,
+        tags: [] // Tags can be added later
       }));
 
-    res.json({ allGames: games, topThree });
+    res.json({ allGames, topThree });
   } catch (err) {
-    console.error('🔥 Error fetching user games:', err.message);
-    res.status(500).json({ error: 'Could not fetch user games' });
+    console.error('🔥 Error fetching games:', err.message);
+    res.status(500).json({ error: 'Failed to fetch games' });
   }
 });
-// Simulate Twitch tags based on the game name
-function mockTwitchTags(gameName) {
-  if (gameName.toLowerCase().includes('hades')) return ['Roguelike', 'Action'];
-  if (gameName.toLowerCase().includes('celeste')) return ['Platformer', 'Indie', 'Story-rich'];
-  if (gameName.toLowerCase().includes('dota')) return ['MOBA', 'Competitive'];
-  return ['Adventure', 'Singleplayer'];  // default
-}
 
 module.exports = router;
