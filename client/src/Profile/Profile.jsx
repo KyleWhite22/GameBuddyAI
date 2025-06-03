@@ -13,6 +13,11 @@ function Profile() {
     const requestRef = useRef();
 
     useEffect(() => {
+        const topThree = JSON.parse(localStorage.getItem('topThree')) || [];
+        setTopGames(topThree);
+    }, []);
+
+    useEffect(() => {
         fetch('http://localhost:5000/auth/user', { credentials: 'include' })
             .then(res => res.json())
             .then(data => {
@@ -30,18 +35,18 @@ function Profile() {
     }, []);
 
     function fetchGames(steamId) {
-  fetch(`http://localhost:5000/api/games/user/${steamId}`)
-    .then(res => res.json())
-    .then(data => {
-      setGames(data.allGames || []);
-      localStorage.setItem('topThree', JSON.stringify(data.topThree));
-      setLoading(false);
-    })
-    .catch(err => {
-      console.error('Failed to fetch games:', err);
-      setLoading(false);
-    });
-}
+        fetch(`http://localhost:5000/api/games/user/${steamId}`)
+            .then(res => res.json())
+            .then(data => {
+                setGames(data.allGames || []);
+                localStorage.setItem('topThree', JSON.stringify(data.topThree));
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Failed to fetch games:', err);
+                setLoading(false);
+            });
+    }
 
 
 
@@ -59,63 +64,74 @@ function Profile() {
 
     return (
         <div className="profile-container">
-            <h1>Welcome, {user.displayName}</h1>
-            <img
-                className="avatar"
-                src={user.photos[2]?.value || user.photos[0].value}
-                alt="avatar"
-            />
-            <p>Steam ID: {user.id}</p>
+            <div className="profile-header">
+                <img
+                    className="avatar"
+                    src={user.photos[2]?.value || user.photos[0].value}
+                    alt="avatar"
+                />
+                <h1 className="username">{user.displayName}</h1>
+            </div>
 
-            <div style={{ marginTop: '10rem' }}>
-                <div className="carousel-container">
-                    <div
-                        className="carousel-inner"
-                        style={{ transform: `rotateY(${rotation}deg)` }}
-                    >
-                        {games.map((game, index) => {
-                            const angle = (360 / games.length) * index;
-                            const totalAngle = (angle + rotation) % 360;
-                            const rad = (totalAngle * Math.PI) / 180;
-                            const isVisible = Math.cos(rad) > 0.5;
+            <p>Your Steam Games:</p>
 
-                            const iconUrl = `http://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg`;
+            <div className="carousel-container">
+                
+                <div
+                    className="carousel-inner"
+                    style={{ "--rotation": `${rotation}deg` }}
+                >
+                    {games.map((game, index) => {
+                        const angle = (360 / games.length) * index;
+                        const totalAngle = (angle + rotation) % 360;
+                        const rad = (totalAngle * Math.PI) / 180;
+                        const isVisible = Math.cos(rad) > 0.5;
 
-                            return (
-                                <div
-                                    key={game.appid}
-                                    className={`game-card ${isVisible ? 'visible' : ''}`}
-                                    style={{
-                                        transform: `rotateY(${angle}deg) translateZ(300px)`
-                                    }}
-                                    onMouseEnter={() => setShowGlow(true)}
-                                    onMouseLeave={() => setShowGlow(false)}
-                                >
-                                    <img
-                                        src={iconUrl}
-                                        alt={game.name}
-                                        onError={(e) => (e.target.style.display = 'none')}
-                                    />
-                                    <div className="game-info">
-                                        <p>{game.name}</p>
-                                        <p>{Math.round(game.playtime_forever / 60)} hrs</p>
-                                    </div>
+                        const iconUrl = `http://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg`;
+
+                        return (
+                            <div
+                                key={game.appid}
+                                className={`game-card ${isVisible ? 'visible' : ''}`}
+                                style={{
+                                    transform: `rotateY(${angle}deg) translateZ(400px)`
+                                }}
+                            >
+                                <img
+                                    src={iconUrl}
+                                    alt={game.name}
+                                    onError={(e) => (e.target.style.display = 'none')}
+                                />
+                                <div className="game-info">
+                                    <p>{game.name}</p>
+                                    <p>{Math.round(game.playtime_forever / 60)} hrs</p>
                                 </div>
-                            );
-                        })}
-                    </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
+            <div className="neon-divider" />
+
+            <div className="top-games">
+                {topGames.map((game) => (
+                    <div className="top-game-card" key={game.appid}>
+                        <img
+                            src={`http://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg`}
+                            alt={game.name}
+                            onError={(e) => (e.target.style.display = 'none')}
+                        />
+                        <p>{game.name}</p>
+                    </div>
+                ))}
+            </div>
+
             {showGlow && <div className="cyber-glow-overlay" />}
-            <button
-                onClick={() => navigate('/chatbot')}
-            >
+            <button onClick={() => navigate('/chatbot')}>
                 Chat with Game Recommender
             </button>
-
         </div>
-
     );
 }
 
