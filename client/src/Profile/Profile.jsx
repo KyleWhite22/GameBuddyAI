@@ -10,6 +10,7 @@ function Profile() {
     const [rotation, setRotation] = useState(0);
     const [showGlow, setShowGlow] = useState(false);
     const [topGames, setTopGames] = useState([]);
+    const [recommendations, setRecommendations] = useState('');
     const requestRef = useRef();
 
     useEffect(() => {
@@ -33,6 +34,10 @@ function Profile() {
                 setLoading(false);
             });
     }, []);
+    useEffect(() => {
+        const topThree = JSON.parse(localStorage.getItem('topThree')) || [];
+        setTopGames(topThree);
+    }, []);
 
     function fetchGames(steamId) {
         fetch(`http://localhost:5000/api/games/user/${steamId}`)
@@ -48,7 +53,23 @@ function Profile() {
             });
     }
 
+    const fetchRecommendations = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('http://localhost:5000/api/recommend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gamesWithTags: topGames }),
+            });
 
+            const data = await res.json();
+            setRecommendations(data.recommendations);
+        } catch (err) {
+            setRecommendations('Failed to fetch recommendations.');
+            console.error('❌ Error fetching recommendations:', err);
+        }
+        setLoading(false);
+    };
 
     useEffect(() => {
         const animate = () => {
@@ -59,7 +80,7 @@ function Profile() {
         return () => cancelAnimationFrame(requestRef.current);
     }, []);
 
-    if (loading) return <p>Loading profile...</p>;
+   // if (loading) return <p>Loading profile...</p>;
     if (!user) return <p>You are not logged in with Steam.</p>;
 
     return (
@@ -76,7 +97,7 @@ function Profile() {
             <p>Your Steam Games:</p>
 
             <div className="carousel-container">
-                
+
                 <div
                     className="carousel-inner"
                     style={{ "--rotation": `${rotation}deg` }}
@@ -127,10 +148,19 @@ function Profile() {
                 ))}
             </div>
 
-            {showGlow && <div className="cyber-glow-overlay" />}
-            <button onClick={() => navigate('/chatbot')}>
-                Chat with Game Recommender
-            </button>
+            <div className="chatbot-container">
+                <h1>AI Game Recommender</h1>
+                <button onClick={fetchRecommendations} disabled={loading}>
+                    {loading ? 'Loading...' : 'Get Recommendations'}
+                </button>
+
+                {recommendations && (
+                    <div className="recommendation-output">
+                        <p>Based on your top 3 most played games, we recommend:</p>
+                        <pre>{recommendations}</pre>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
