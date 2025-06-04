@@ -5,7 +5,7 @@ body, html {
   background-color: #000;
   font-family: Arial, sans-serif;
   color: #00ff00;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .profile-container {
@@ -39,22 +39,22 @@ body, html {
 .carousel-container {
   position: relative;
   width: 100%;
-  height: 400px;
+  height: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
   perspective: 1000px;
+  margin-bottom: 10rem;
 }
 
 .carousel-inner {
   position: absolute;
-  top: 30%;
+  top: 50%;
   left: 50%;
   width: 0;
   height: 0;
-  transform: translate(-50%, -50%) rotateY(var(--rotation, 0deg));
+  transform: translate(-50%, -50%);
   transform-style: preserve-3d;
-  transform-origin: center center;
 }
 .carousel-center {
   position: absolute;
@@ -70,31 +70,28 @@ body, html {
 }
 
 .game-card {
+  width: 100px;
+  height: 140px;
   position: absolute;
-  width: 80px;
-  height: 120px;
   text-align: center;
-  transition: transform 0.3s ease, scale 0.3s ease, opacity 0.3s ease;
-  transform-style: preserve-3d;
-  cursor: pointer;
   opacity: 0;
   pointer-events: none;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform-style: preserve-3d;
 }
-
 .game-card.visible {
   opacity: 1;
   pointer-events: auto;
 }
 
 .game-card img {
-  width: 70px;
-  height: 70px;
+  width: 100px;
+  height: 60px;
+  object-fit: cover;
   border-radius: 8px;
   display: block;
-  margin: 0 auto 30px auto;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin: 0 auto;
 }
-
 .game-info {
   font-size: 0.6rem;
   margin-top: 3px;
@@ -156,38 +153,112 @@ body, html {
 }
 
 .top-game-card {
-  background-color: #222;
+  background-color: #000 !important;
   padding: 1rem;
   border-radius: 12px;
-  box-shadow: 0 0 12px #00ffcc55;
+  box-shadow: 0 0 12px #000;
   text-align: center;
   width: 120px;
 }
 
 .top-game-card img {
   width: 80px;
-  height: 64px;
+  height: 80px;
   margin-bottom: 0.5rem;
   border-radius: 8px;
 }
-.neon-divider {
-  width: 80%;
-  height: 4px;
-  margin: 2rem auto 1rem auto; /* tighter bottom margin */
-  background: #00ff00;
-  box-shadow: 0 0 8px #00ff00, 0 0 16px #00ff00, 0 0 24px #00ff00;
-  border-radius: 2px;
-  animation: pulseGlow 2s infinite ease-in-out;
+
+
+.chatbot-container {
+  background-color: #000;
+  border: 1px solid #a23529;
+  box-shadow: 0 0 12px #7d3e10;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-top: 2rem;
+  color: rgb(224, 120, 16);
+  text-align: center;
+  max-width: 600px;
 }
 
-@keyframes pulseGlow {
+
+
+.neon-smile-divider {
+  margin: 0 rem auto 0rem auto; /* pull it up closer to carousel */
+  width: 70%;
+  height: 100px;
+  filter: drop-shadow(0 0 6px #00ff00) drop-shadow(0 0 12px #00ff00);
+  animation: smileGlow 2s ease-in-out infinite;
+
+}
+
+@keyframes smileGlow {
   0% {
-    box-shadow: 0 0 8px #00ff00, 0 0 16px #00ff00, 0 0 24px #00ff00;
+    filter: drop-shadow(0 0 6px #00ff00) drop-shadow(0 0 12px #00ff00);
   }
   50% {
-    box-shadow: 0 0 16px #00ff88, 0 0 32px #00ff88, 0 0 48px #00ff88;
+    filter: drop-shadow(0 0 10px #00ff88) drop-shadow(0 0 20px #00ff88);
   }
   100% {
-    box-shadow: 0 0 8px #00ff00, 0 0 16px #00ff00, 0 0 24px #00ff00;
+    filter: drop-shadow(0 0 6px #00ff00) drop-shadow(0 0 12px #00ff00);
+  }
+}
+
+.game-image {
+  width: 230px;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+  image-rendering: auto;
+  box-shadow: 0 0 12px #00ff00;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.game-card.visible:hover .game-image,
+.top-game-card:hover .game-image {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px 5px #00ff88;
+}
+
+.steam-games-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  color: #00ff00;
+  margin: 2rem 0;
+  position: relative;
+  text-shadow:
+    0 0 5px #00ff00,
+    0 0 10px #00ff00,
+    0 0 20px #00ff00,
+    0 0 40px #00ff00;
+  animation: pulseTitle 2s infinite ease-in-out;
+}
+
+@keyframes pulseTitle {
+  0% {
+    text-shadow:
+      0 0 5px #00ff00,
+      0 0 10px #00ff00,
+      0 0 20px #00ff00,
+      0 0 40px #00ff00;
+    transform: scale(1);
+  }
+  50% {
+    text-shadow:
+      0 0 10px #00ff00,
+      0 0 20px #00ff00,
+      0 0 30px #00ff00,
+      0 0 60px #00ff00;
+    transform: scale(1.05);
+  }
+  100% {
+    text-shadow:
+      0 0 5px #00ff00,
+      0 0 10px #00ff00,
+      0 0 20px #00ff00,
+      0 0 40px #00ff00;
+    transform: scale(1);
   }
 }

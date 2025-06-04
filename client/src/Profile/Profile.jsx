@@ -73,14 +73,14 @@ function Profile() {
 
     useEffect(() => {
         const animate = () => {
-            setRotation(prev => (prev + .07) % 360);
+            setRotation(prev => prev + 0.05);
             requestRef.current = requestAnimationFrame(animate);
         };
         requestRef.current = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(requestRef.current);
     }, []);
 
-   // if (loading) return <p>Loading profile...</p>;
+    // if (loading) return <p>Loading profile...</p>;
     if (!user) return <p>You are not logged in with Steam.</p>;
 
     return (
@@ -94,32 +94,42 @@ function Profile() {
                 <h1 className="username">{user.displayName}</h1>
             </div>
 
-            <p>Your Steam Games:</p>
+<p className="steam-games-title">Your Steam Games:</p>
+            <div className="neon-smile-divider">
+                <svg width="100%" height="100" viewBox="0 0 500 100" preserveAspectRatio="none">
+                    <path d="M50,10 Q250,120 500,20" stroke="#00ff00" strokeWidth="3" fill="transparent" />
+                </svg>
+            </div>
 
             <div className="carousel-container">
-
-                <div
-                    className="carousel-inner"
-                    style={{ "--rotation": `${rotation}deg` }}
-                >
+                <div className="carousel-inner">
                     {games.map((game, index) => {
                         const angle = (360 / games.length) * index;
-                        const totalAngle = (angle + rotation) % 360;
-                        const rad = (totalAngle * Math.PI) / 180;
+                        const dynamicAngle = angle + rotation;
+                        const angleWithRotation = angle + rotation;
+                        const rad = (angleWithRotation * Math.PI) / 180;
                         const isVisible = Math.cos(rad) > 0.5;
+const dipAmount = -60; // adjust to control depth
 
-                        const iconUrl = `http://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg`;
+const yOffset = -Math.cos(rad) * dipAmount + dipAmount;
+
 
                         return (
                             <div
                                 key={game.appid}
                                 className={`game-card ${isVisible ? 'visible' : ''}`}
+
                                 style={{
-                                    transform: `rotateY(${angle}deg) translateZ(400px)`
+                                    transform: `
+  rotateY(${angleWithRotation}deg)
+  translateZ(500px)
+  translateY(${yOffset}px)
+`
                                 }}
                             >
                                 <img
-                                    src={iconUrl}
+                                    className="game-image"
+                                    src={`https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg`}
                                     alt={game.name}
                                     onError={(e) => (e.target.style.display = 'none')}
                                 />
@@ -133,13 +143,18 @@ function Profile() {
                 </div>
             </div>
 
-            <div className="neon-divider" />
+            <div className="neon-smile-divider">
+                <svg width="100%" height="100" viewBox="0 0 500 100" preserveAspectRatio="none">
+                    <path d="M50,0 Q250,150 500,0" stroke="#00ff00" strokeWidth="3" fill="transparent" />
+                </svg>
+            </div>
 
             <div className="top-games">
                 {topGames.map((game) => (
                     <div className="top-game-card" key={game.appid}>
                         <img
-                            src={`http://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg`}
+                            className="game-image"
+                            src={`https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg`}
                             alt={game.name}
                             onError={(e) => (e.target.style.display = 'none')}
                         />
@@ -163,6 +178,7 @@ function Profile() {
             </div>
         </div>
     );
+
 }
 
 export default Profile;

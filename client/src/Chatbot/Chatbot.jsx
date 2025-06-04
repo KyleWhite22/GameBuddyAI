@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Chatbot.css';
+//import './Chatbot.css';
 
 function Chatbot() {
   const [recommendations, setRecommendations] = useState('');
