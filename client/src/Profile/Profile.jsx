@@ -14,7 +14,18 @@ function Profile() {
     const [showGamePicker, setShowGamePicker] = useState(false);
     const [customSelection, setCustomSelection] = useState([]);
     const requestRef = useRef();
+    const [ratings, setRatings] = useState(() => {
+        const stored = localStorage.getItem('gameRatings');
+        return stored ? JSON.parse(stored) : {};
+    });
+    const [paused, setPaused] = useState(false);
+    const [pendingRatingAppId, setPendingRatingAppId] = useState(null);
 
+    const setRating = (appid, value) => {
+        const updated = { ...ratings, [appid]: value };
+        setRatings(updated);
+        localStorage.setItem('gameRatings', JSON.stringify(updated));
+    };
     useEffect(() => {
         try {
             const storedTopThree = localStorage.getItem('topThree');
@@ -89,12 +100,14 @@ function Profile() {
 
     useEffect(() => {
         const animate = () => {
-            setRotation(prev => prev + 0.05);
+            if (!paused) {
+                setRotation(prev => prev + 0.05);
+            }
             requestRef.current = requestAnimationFrame(animate);
         };
         requestRef.current = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(requestRef.current);
-    }, []);
+    }, [paused]); // ✅ pause-aware
 
     if (!user) return <p>You are not logged in with Steam.</p>;
 
@@ -112,6 +125,7 @@ function Profile() {
             <p className="steam-games-title">Your Steam Games:</p>
 
             <div className="carousel-container">
+                {paused && <div className="pause-overlay">Click a star to rate or skip</div>}
                 <div className="carousel-inner">
                     {games.map((game, index) => {
                         const angle = (360 / games.length) * index;
@@ -127,10 +141,14 @@ function Profile() {
                                 className={`game-card ${isVisible ? 'visible' : ''}`}
                                 style={{
                                     transform: `
-                                        rotateY(${angleWithRotation}deg)
-                                        translateZ(500px)
-                                        translateY(${yOffset}px)
-                                    `
+            rotateY(${angleWithRotation}deg)
+            translateZ(500px)
+            translateY(${yOffset}px)
+        `
+                                }}
+                                onClick={() => {
+                                    setPaused(true);
+                                    setPendingRatingAppId(game.appid);
                                 }}
                             >
                                 <img
@@ -142,6 +160,40 @@ function Profile() {
                                 <div className="game-info">
                                     <p>{game.name}</p>
                                     <p>{Math.round(game.playtime_forever / 60)} hrs</p>
+
+                                    {/* Star rating UI (always shown, but only clickable if selected) */}
+                                    <div className="rating-stars">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <span
+                                                key={star}
+                                                className={`star ${ratings[game.appid] >= star ? 'filled' : ''} ${pendingRatingAppId === game.appid ? 'clickable' : 'disabled'}`}
+                                                onClick={(e) => {
+                                                    if (pendingRatingAppId === game.appid) {
+                                                        e.stopPropagation();
+                                                        setRating(game.appid, star);
+                                                        setPaused(false);
+                                                        setPendingRatingAppId(null);
+                                                    }
+                                                }}
+                                            >
+                                                ★
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    {/* Show Skip button only when game is selected */}
+                                    {pendingRatingAppId === game.appid && (
+                                        <button
+                                            className="skip-rating-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setPaused(false);
+                                                setPendingRatingAppId(null);
+                                            }}
+                                        >
+                                            Skip Rating
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -151,7 +203,7 @@ function Profile() {
 
             <div className="chatbot-container">
                 <h1>AI Game Recommender</h1>
-               
+
 
                 <p className="chatbot-subtext">Your Top 3 Most Played Games</p>
                 <div className="top-games inside">
@@ -173,7 +225,7 @@ function Profile() {
                 <button className="customize-button" onClick={() => setShowGamePicker(true)}>
                     Customize Top 3
                 </button>
- <div className="cube-button-container" onClick={fetchRecommendations}>
+                <div className="cube-button-container" onClick={fetchRecommendations}>
                     <div className="cube-label">{loading ? 'Thinking...' : 'Get Recommendations'}</div>
                     <div className={`cube ${loading ? 'loading' : ''}`}>
                         <div className="face front"></div>
@@ -201,9 +253,8 @@ function Profile() {
                         {games.map(game => (
                             <div
                                 key={game.appid}
-                                className={`game-picker-item ${
-                                    customSelection.find(g => g.appid === game.appid) ? 'selected' : ''
-                                }`}
+                                className={`game-picker-item ${customSelection.find(g => g.appid === game.appid) ? 'selected' : ''
+                                    }`}
                                 onClick={() => {
                                     setCustomSelection(prev => {
                                         const exists = prev.find(g => g.appid === game.appid);
