@@ -1,3 +1,4 @@
+// Updated Profile.jsx with game picker functionality
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
@@ -10,18 +11,22 @@ function Profile() {
     const [rotation, setRotation] = useState(0);
     const [topGames, setTopGames] = useState([]);
     const [recommendations, setRecommendations] = useState('');
+    const [showGamePicker, setShowGamePicker] = useState(false);
+    const [customSelection, setCustomSelection] = useState([]);
     const requestRef = useRef();
 
     useEffect(() => {
         try {
             const storedTopThree = localStorage.getItem('topThree');
             if (storedTopThree && storedTopThree !== "undefined") {
-                setTopGames(JSON.parse(storedTopThree));
+                const parsed = JSON.parse(storedTopThree);
+                setTopGames(parsed);
+                setCustomSelection(parsed);
             } else {
                 setTopGames([]);
             }
         } catch (err) {
-            console.error("❌ Failed to parse topThree from localStorage:", err);
+            console.error("\u274C Failed to parse topThree from localStorage:", err);
             setTopGames([]);
         }
     }, []);
@@ -51,6 +56,7 @@ function Profile() {
                 if (Array.isArray(data.topThree)) {
                     localStorage.setItem('topThree', JSON.stringify(data.topThree));
                     setTopGames(data.topThree);
+                    setCustomSelection(data.topThree);
                 } else {
                     localStorage.removeItem('topThree');
                     setTopGames([]);
@@ -76,7 +82,7 @@ function Profile() {
             setRecommendations(data.recommendations);
         } catch (err) {
             setRecommendations('Failed to fetch recommendations.');
-            console.error('❌ Error fetching recommendations:', err);
+            console.error('\u274C Error fetching recommendations:', err);
         }
         setLoading(false);
     };
@@ -104,11 +110,6 @@ function Profile() {
             </div>
 
             <p className="steam-games-title">Your Steam Games:</p>
-            <div className="neon-smile-divider">
-                <svg width="100%" height="100" viewBox="0 0 500 100" preserveAspectRatio="none">
-                    <path d="M50,10 Q250,120 500,20" stroke="#00ff00" strokeWidth="3" fill="transparent" />
-                </svg>
-            </div>
 
             <div className="carousel-container">
                 <div className="carousel-inner">
@@ -148,39 +149,91 @@ function Profile() {
                 </div>
             </div>
 
-            <div className="neon-smile-divider">
-                <svg width="100%" height="100" viewBox="0 0 500 100" preserveAspectRatio="none">
-                    <path d="M50,0 Q250,150 500,0" stroke="#00ff00" strokeWidth="3" fill="transparent" />
-                </svg>
-            </div>
-
-            <div className="top-games">
-                {topGames.map((game) => (
-                    <div className="top-game-card" key={game.appid}>
-                        <img
-                            className="game-image"
-                            src={`https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg`}
-                            alt={game.name}
-                            onError={(e) => (e.target.style.display = 'none')}
-                        />
-                        <p>{game.name}</p>
-                    </div>
-                ))}
-            </div>
-
             <div className="chatbot-container">
                 <h1>AI Game Recommender</h1>
-                <button onClick={fetchRecommendations} disabled={loading}>
-                    {loading ? 'Loading...' : 'Get Recommendations'}
-                </button>
+               
 
+                <p className="chatbot-subtext">Your Top 3 Most Played Games</p>
+                <div className="top-games inside">
+                    {topGames.map((game) => (
+                        <div className="top-game-large" key={game.appid}>
+                            <img
+                                className="top-game-image"
+                                src={`https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg`}
+                                alt={game.name}
+                                onError={(e) => (e.target.style.display = 'none')}
+                            />
+                            <div className="top-game-info">
+                                <p>{game.name}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <button className="customize-button" onClick={() => setShowGamePicker(true)}>
+                    Customize Top 3
+                </button>
+ <div className="cube-button-container" onClick={fetchRecommendations}>
+                    <div className="cube-label">{loading ? 'Thinking...' : 'Get Recommendations'}</div>
+                    <div className={`cube ${loading ? 'loading' : ''}`}>
+                        <div className="face front"></div>
+                        <div className="face back"></div>
+                        <div className="face right"></div>
+                        <div className="face left"></div>
+                        <div className="face top"></div>
+                        <div className="face bottom"></div>
+                    </div>
+                </div>
                 {recommendations && (
                     <div className="recommendation-output">
-                        <p>Based on your top 3 most played games, we recommend:</p>
-                        <pre>{recommendations}</pre>
+                        <p className="recommendation-header">
+                            Based on your top 3 most played games, we recommend:
+                        </p>
+                        <pre className="recommendation-text">{recommendations}</pre>
                     </div>
                 )}
             </div>
+
+            {showGamePicker && (
+                <div className="game-picker-modal">
+                    <h2>Select 3 Games</h2>
+                    <div className="game-picker-list">
+                        {games.map(game => (
+                            <div
+                                key={game.appid}
+                                className={`game-picker-item ${
+                                    customSelection.find(g => g.appid === game.appid) ? 'selected' : ''
+                                }`}
+                                onClick={() => {
+                                    setCustomSelection(prev => {
+                                        const exists = prev.find(g => g.appid === game.appid);
+                                        if (exists) return prev.filter(g => g.appid !== game.appid);
+                                        if (prev.length < 3) return [...prev, game];
+                                        return prev;
+                                    });
+                                }}
+                            >
+                                <img
+                                    src={`https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg`}
+                                    alt={game.name}
+                                />
+                                <p>{game.name}</p>
+                            </div>
+                        ))}
+                    </div>
+                    <button
+                        className="save-button"
+                        disabled={customSelection.length !== 3}
+                        onClick={() => {
+                            setTopGames(customSelection);
+                            localStorage.setItem('topThree', JSON.stringify(customSelection));
+                            setShowGamePicker(false);
+                        }}
+                    >
+                        Save Selection
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
