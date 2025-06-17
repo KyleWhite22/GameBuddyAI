@@ -8,14 +8,22 @@ function Profile() {
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
     const [rotation, setRotation] = useState(0);
-    const [showGlow, setShowGlow] = useState(false);
     const [topGames, setTopGames] = useState([]);
     const [recommendations, setRecommendations] = useState('');
     const requestRef = useRef();
 
     useEffect(() => {
-        const topThree = JSON.parse(localStorage.getItem('topThree')) || [];
-        setTopGames(topThree);
+        try {
+            const storedTopThree = localStorage.getItem('topThree');
+            if (storedTopThree && storedTopThree !== "undefined") {
+                setTopGames(JSON.parse(storedTopThree));
+            } else {
+                setTopGames([]);
+            }
+        } catch (err) {
+            console.error("❌ Failed to parse topThree from localStorage:", err);
+            setTopGames([]);
+        }
     }, []);
 
     useEffect(() => {
@@ -34,17 +42,19 @@ function Profile() {
                 setLoading(false);
             });
     }, []);
-    useEffect(() => {
-        const topThree = JSON.parse(localStorage.getItem('topThree')) || [];
-        setTopGames(topThree);
-    }, []);
 
     function fetchGames(steamId) {
         fetch(`http://localhost:5000/api/games/user/${steamId}`)
             .then(res => res.json())
             .then(data => {
                 setGames(data.allGames || []);
-                localStorage.setItem('topThree', JSON.stringify(data.topThree));
+                if (Array.isArray(data.topThree)) {
+                    localStorage.setItem('topThree', JSON.stringify(data.topThree));
+                    setTopGames(data.topThree);
+                } else {
+                    localStorage.removeItem('topThree');
+                    setTopGames([]);
+                }
                 setLoading(false);
             })
             .catch(err => {
@@ -80,7 +90,6 @@ function Profile() {
         return () => cancelAnimationFrame(requestRef.current);
     }, []);
 
-    // if (loading) return <p>Loading profile...</p>;
     if (!user) return <p>You are not logged in with Steam.</p>;
 
     return (
@@ -94,7 +103,7 @@ function Profile() {
                 <h1 className="username">{user.displayName}</h1>
             </div>
 
-<p className="steam-games-title">Your Steam Games:</p>
+            <p className="steam-games-title">Your Steam Games:</p>
             <div className="neon-smile-divider">
                 <svg width="100%" height="100" viewBox="0 0 500 100" preserveAspectRatio="none">
                     <path d="M50,10 Q250,120 500,20" stroke="#00ff00" strokeWidth="3" fill="transparent" />
@@ -105,26 +114,22 @@ function Profile() {
                 <div className="carousel-inner">
                     {games.map((game, index) => {
                         const angle = (360 / games.length) * index;
-                        const dynamicAngle = angle + rotation;
                         const angleWithRotation = angle + rotation;
                         const rad = (angleWithRotation * Math.PI) / 180;
                         const isVisible = Math.cos(rad) > 0.5;
-const dipAmount = -60; // adjust to control depth
-
-const yOffset = -Math.cos(rad) * dipAmount + dipAmount;
-
+                        const dipAmount = -60;
+                        const yOffset = -Math.cos(rad) * dipAmount + dipAmount;
 
                         return (
                             <div
                                 key={game.appid}
                                 className={`game-card ${isVisible ? 'visible' : ''}`}
-
                                 style={{
                                     transform: `
-  rotateY(${angleWithRotation}deg)
-  translateZ(500px)
-  translateY(${yOffset}px)
-`
+                                        rotateY(${angleWithRotation}deg)
+                                        translateZ(500px)
+                                        translateY(${yOffset}px)
+                                    `
                                 }}
                             >
                                 <img
@@ -178,7 +183,6 @@ const yOffset = -Math.cos(rad) * dipAmount + dipAmount;
             </div>
         </div>
     );
-
 }
 
 export default Profile;
