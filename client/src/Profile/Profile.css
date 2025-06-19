@@ -170,7 +170,7 @@ body, html {
 
 .chatbot-container {
   max-width: 900px;
-  margin: 3rem auto;
+  margin: 7rem auto;
   text-align: center;
 }
 
@@ -548,4 +548,75 @@ body, html {
       0 0 60px #00ff00,
       0 0 72px #00ff00;
   }
+}
+.globe-container {
+  width: 120px;
+  height: 120px;
+  perspective: 800px;
+  margin-top: 1rem;
+}
+
+.globe {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: spinGlobe 1s linear infinite;
+}
+
+.latitude,
+.longitude {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 120px;
+  height: 120px;
+  border: 2px solid #00ff00;
+  border-radius: 50%;
+  opacity: 0.3;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  box-shadow: 0 0 10px #00ff00;
+}
+
+.globe-container.loading .latitude,
+.globe-container.loading .longitude {
+  border-color: #ffffff;
+  box-shadow:
+    0 0 5px #ffffff,
+    0 0 10px #ffffff,
+    0 0 20px #ffffff;
+}
+
+.globe {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: spinGlobe 6s linear infinite;
+}
+
+.globe-container.loading .globe {
+  animation-duration: 0.5s; /* Spins faster */
+}
+
+@keyframes spinGlobe {
+  from { transform: rotateY(0deg) rotateX(20deg); }
+  to   { transform: rotateY(360deg) rotateX(20deg); }
+}
+
+.submit-rating-btn {
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border: none;
+  background-color: #00ff00;
+  color: #000;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submit-rating-btn:hover {
+  background-color: #00cc00;
 }

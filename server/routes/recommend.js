@@ -12,6 +12,8 @@ router.post('/', async (req, res) => {
     // ✅ Extract and flatten all tags
     const allTags = gamesWithTags.flatMap(game => game.tags || []);
     const uniqueTags = [...new Set(allTags)];
+    console.log("Incoming topGames payload:", gamesWithTags);
+    console.log("Extracted tags:", uniqueTags);
 
     // ✅ Create a fake recommendation using the tags
     //const recommendations = `Because you enjoy games with tags like: ${uniqueTags.join(', ')}, you might like Hades, Hollow Knight, or Slay the Spire.`;
@@ -21,12 +23,12 @@ router.post('/', async (req, res) => {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const prompt = `Suggest 3 games based on these Steam tags: ${uniqueTags.join(', ')}. 
-Give short explanations for why each game was chosen. Format the response nicely for display. Keep in the consistent format of game title, game tags, and a short description`;
+ Format the response nicely for display. Keep in the consistent format of #. game title then short description`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 200,
+      max_tokens: 4096,
     });
 
     res.json({ recommendations: completion.choices[0].message.content });

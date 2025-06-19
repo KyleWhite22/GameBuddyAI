@@ -34,7 +34,7 @@ app.use(passport.session());
 app.use(express.json());
 app.use('/auth', steamAuth);
 app.use('/api/games', gamesRoute); // ✅ NEW
-app.use('/api/steam', steamTagsRoute);
+app.use('/api', steamTagsRoute);
 app.use('/api/recommend', recommendRoute);  // New recommendation route
 
 

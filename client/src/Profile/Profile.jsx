@@ -125,7 +125,7 @@ function Profile() {
             <p className="steam-games-title">Your Steam Games:</p>
 
             <div className="carousel-container">
-                {paused && <div className="pause-overlay">Click a star to rate or skip</div>}
+                {paused && <div className="pause-overlay"></div>}
                 <div className="carousel-inner">
                     {games.map((game, index) => {
                         const angle = (360 / games.length) * index;
@@ -170,11 +170,10 @@ function Profile() {
                                                 onClick={(e) => {
                                                     if (pendingRatingAppId === game.appid) {
                                                         e.stopPropagation();
-                                                        setRating(game.appid, star);
-                                                        setPaused(false);
-                                                        setPendingRatingAppId(null);
+                                                        setRating(game.appid, star); // ✅ Only rate here — don't unpause
                                                     }
                                                 }}
+
                                             >
                                                 ★
                                             </span>
@@ -184,14 +183,14 @@ function Profile() {
                                     {/* Show Skip button only when game is selected */}
                                     {pendingRatingAppId === game.appid && (
                                         <button
-                                            className="skip-rating-btn"
+                                            className="submit-rating-btn"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setPaused(false);
                                                 setPendingRatingAppId(null);
                                             }}
                                         >
-                                            Skip Rating
+                                            Submit
                                         </button>
                                     )}
                                 </div>
@@ -205,7 +204,7 @@ function Profile() {
                 <h1>AI Game Recommender</h1>
 
 
-                <p className="chatbot-subtext">Your Top 3 Most Played Games</p>
+                <p className="chatbot-subtext">3 Chosen Games</p>
                 <div className="top-games inside">
                     {topGames.map((game) => (
                         <div className="top-game-large" key={game.appid}>
@@ -223,23 +222,25 @@ function Profile() {
                 </div>
 
                 <button className="customize-button" onClick={() => setShowGamePicker(true)}>
-                    Customize Top 3
+                    Customize Games
                 </button>
                 <div className="cube-button-container" onClick={fetchRecommendations}>
                     <div className="cube-label">{loading ? 'Thinking...' : 'Get Recommendations'}</div>
-                    <div className={`cube ${loading ? 'loading' : ''}`}>
-                        <div className="face front"></div>
-                        <div className="face back"></div>
-                        <div className="face right"></div>
-                        <div className="face left"></div>
-                        <div className="face top"></div>
-                        <div className="face bottom"></div>
+                    <div className={`globe-container ${loading ? 'loading' : ''}`}>
+                        <div className="globe">
+                            {[...Array(6)].map((_, i) => (
+                                <div key={`lat-${i}`} className="latitude" style={{ transform: `rotateX(${i * 30}deg)` }} />
+                            ))}
+                            {[...Array(6)].map((_, i) => (
+                                <div key={`lon-${i}`} className="longitude" style={{ transform: `rotateY(${i * 30}deg)` }} />
+                            ))}
+                        </div>
                     </div>
                 </div>
                 {recommendations && (
                     <div className="recommendation-output">
                         <p className="recommendation-header">
-                            Based on your top 3 most played games, we recommend:
+                            Based on your 3 selected games, we recommend:
                         </p>
                         <pre className="recommendation-text">{recommendations}</pre>
                     </div>
@@ -275,14 +276,29 @@ function Profile() {
                     <button
                         className="save-button"
                         disabled={customSelection.length !== 3}
-                        onClick={() => {
-                            setTopGames(customSelection);
-                            localStorage.setItem('topThree', JSON.stringify(customSelection));
-                            setShowGamePicker(false);
+                        onClick={async () => {
+                            try {
+                                const enriched = await Promise.all(
+                                    customSelection.map(async (game) => {
+                                        const res = await fetch(`http://localhost:5000/api/tags/${game.appid}`);
+                                        if (!res.ok) throw new Error(`Failed to fetch tags for ${game.name}`);
+                                        const data = await res.json();
+                                        return { ...game, tags: data.tags || [] };
+                                    })
+                                );
+
+                                setTopGames(enriched);
+                                localStorage.setItem('topThree', JSON.stringify(enriched));
+                                setShowGamePicker(false);
+                            } catch (err) {
+                                console.error("❌ Failed to fetch tags or save selection:", err);
+                                alert("Failed to save selection. Check console for errors.");
+                            }
                         }}
                     >
                         Save Selection
                     </button>
+
                 </div>
             )}
         </div>
